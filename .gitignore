@@ -1,10 +1,7 @@
 ### C ###
 # Prerequisites
 *.d
-<<<<<<< Updated upstream
-=======
 .config/
->>>>>>> Stashed changes
 
 # Object files
 *.o
