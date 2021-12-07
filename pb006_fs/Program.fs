@@ -46,7 +46,7 @@ let day =
             mapAdd (key - 1) v state
     Map.fold folder (Map[])
 
-let rec part1 days (input: Map<int, bigint>) = 
+let rec part1 days input = 
     if days <= 0 then
         input
         |> Map.values
@@ -76,4 +76,4 @@ open System.IO
 let input =  File.ReadLines("input") |> Seq.head |> parse |> toMap
 
 part1 80 input |> printfn "part1 %A"
-part2 input |> printfn "%A"
+part2 input |> printfn "part2 %A"
