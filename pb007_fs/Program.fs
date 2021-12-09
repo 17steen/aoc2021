@@ -5,6 +5,17 @@ let split (seps:string[]) (string:string) =
 
 let lines = split [| "\r\n"; "\n" |]
 
+let minMax thing =
+    let head = Seq.head thing
+    thing 
+    |> Seq.tail
+    |> Seq.fold (
+        fun (min, max) a -> 
+            if a < min then (a, max)
+            else if a > max then (min, a)
+            else (min, max)
+    ) (head, head) 
+
 let parse =
     split [|","|] >> Array.map int
 
@@ -57,15 +68,8 @@ let part2poop (input:int[]) =
     |> Array.sum
 
 let part2 (input:int[]) =
-    let sorted =
-        input
-        |> Array.sort
-    
-    let min = Array.head sorted
-    let max = Array.last sorted
 
-    printfn $"max {min}"
-    printfn $"max {max}"
+    let (min, max) = minMax input
 
     seq {
         for i in min .. max ->
