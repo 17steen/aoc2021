@@ -39,7 +39,7 @@ let twoOf arr =
     | _ -> failwith "not two"
 
 let rec paths (current:string) (traversed: string list) (connectionsMap: Map<string, string Set>) = 
-    if current.ToLower() = current 
+    if current.ToLower() = current
         && List.contains current traversed 
     then [] else
 
@@ -53,7 +53,28 @@ let rec paths (current:string) (traversed: string list) (connectionsMap: Map<str
     }
     |> List.concat
 
-let solve input =
+let rec paths2 (current:string) (traversed: string list) (connectionsMap: Map<string, string Set>) = 
+    let smallCaves = traversed |> List.where (fun a -> a = a.ToLower())
+    let distinctLen = smallCaves |> List.distinct |> List.length
+    let len = smallCaves |> List.length
+
+    if (not traversed.IsEmpty && current = "start") || (len - distinctLen) = 2 then [] else
+
+    if current = "end" then [current :: traversed] else
+
+    let connections = Map.find current connectionsMap
+
+    seq {
+        for connection in connections ->
+            paths2 connection (current :: traversed) connectionsMap
+    }
+    |> List.concat
+
+
+let solve (input:string) =
+    // dirty hack to get part2 working :^)
+    printfn "%A" input
+    //failwith "wait"
     let array = 
         lines input
         |> Seq.map(
@@ -82,16 +103,15 @@ let solve input =
         array
         |> Seq.fold folder Map[]
     
-    let results = paths "start" [] connections
+    let part1   = paths     "start" [] connections |> List.length
+    let part2   = paths2    "start" [] connections |> List.length
 
-    //printfn "%A" results
-    //printfn "%A" (List.length results)
-
-    List.length results
+    (part1, part2)
 
 
-assert(solve sample |> (=) 10)
-assert(solve sample3 |> (=) 226)
+assert(solve sample |> (=) (10, 36))
+assert(solve sample3 |> (=) (226, 3509))
+printfn "%A" <| solve sample
 
 open System.IO
 
