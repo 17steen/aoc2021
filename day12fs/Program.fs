@@ -72,7 +72,6 @@ let rec paths2 (current:string) (traversed: string list) (connectionsMap: Map<st
 
 
 let solve (input:string) =
-    // dirty hack to get part2 working :^)
     printfn "%A" input
     //failwith "wait"
     let array = 
