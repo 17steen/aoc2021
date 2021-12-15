@@ -27,46 +27,64 @@ var test = Parse(
 );
 
 var file = Parse(File.ReadAllLines("input"));
-//Console.WriteLine(Solve(test, 10));
-Console.WriteLine(Solve(sampleGrid));
-//Console.WriteLine(Solve(file)); // doesn't work, because i don't allow it to go up
+var bade = Parse(File.ReadAllLines("input_bade"));
+Console.WriteLine(Solve(sampleGrid)); 
+Console.WriteLine(Solve(file)); 
+Console.WriteLine(Solve(bade)); 
 
 
-
-(int, int) Solve(byte[,] grid1, int repeat = 5)
+(int, int) Solve(byte[,] grid, int repeat = 5)
 {
-    var xLen = grid1.GetLength(0);
-    var yLen = grid1.GetLength(1);
+    var xLen = grid.GetLength(0);
+    var yLen = grid.GetLength(1);
 
-    var cache1 = new int?[xLen, yLen];
-
-    var grid2   = new byte[xLen * repeat, yLen * repeat];
-    var cache2  = new int?[xLen * repeat, yLen * repeat];
+    var grid2 = new byte[xLen * repeat, yLen * repeat];
 
     for (var y = 0; y < yLen * repeat; ++y)
     {
         for (var x = 0; x < xLen * repeat; ++x)
         {
             var addition = x / xLen + y / yLen;
-            int now =  grid1[x % xLen, y % yLen] + addition;
-            if( now > 9)
-            {
-                now = (now - 1) % 9 + 1;
-            }
-            grid2[x, y] = (byte) now;
+            int now = grid[x % xLen, y % yLen] + addition;
+
+            now = (now - 1) % 9 + 1;
+
+            grid2[x, y] = (byte)now;
         }
     }
 
-    Print(grid2);
+    var part1 = MinPathSteen(new Grid<byte>(grid), out var path);
+    Print(new Grid<byte>(grid), path);
 
-    var part1 = MinPath(grid1, cache1, new()) - grid1[0, 0];
-    var part2 = MinPath(grid2, cache2, new()) - grid2[0, 0];
+    var part2 = MinPathSteen(new VirtuallyRepeatedGrid(grid, repeat), out var _dontcare);
 
+    var part2unbased = MinPathSteen(new Grid<byte>(PhysicallyRepeatGrid(grid, repeat)), out var _dontcareaswell);
     return (part1, part2);
 }
 
+byte[,] PhysicallyRepeatGrid(byte[,] grid, int repeat) {
+    var xLen = grid.GetLength(0);
+    var yLen = grid.GetLength(1);
 
-void Print<T>(T[,] xyGrid, IEnumerable<(int, int)>? points = null)
+    var grid2 = new byte[xLen * repeat, yLen * repeat];
+
+    for (var y = 0; y < yLen * repeat; ++y)
+    {
+        for (var x = 0; x < xLen * repeat; ++x)
+        {
+            var addition = x / xLen + y / yLen;
+            int now = grid[x % xLen, y % yLen] + addition;
+
+            now = (now - 1) % 9 + 1;
+
+            grid2[x, y] = (byte)now;
+        }
+    }
+
+    return grid2;
+}
+
+void Print<T>(I2DReadOnlyIndexable<T> xyGrid, IEnumerable<(int, int)>? points = null)
 {
     var xLen = xyGrid.GetLength(0);
     var yLen = xyGrid.GetLength(1);
@@ -75,23 +93,20 @@ void Print<T>(T[,] xyGrid, IEnumerable<(int, int)>? points = null)
     {
         for (var x = 0; x < xLen; ++x)
         {
-            if (points?.Contains((x, y))??false)
+            if (points?.Contains((x, y)) ?? false)
             {
-                Console.BackgroundColor = ConsoleColor.White;
-                Console.ForegroundColor = ConsoleColor.DarkGreen;
-                Console.Write(xyGrid[x, y]);
-                Console.ResetColor();
+                Console.BackgroundColor = ConsoleColor.DarkGreen;
+                Console.ForegroundColor = ConsoleColor.Red;
             }
-            else
-            {
-                Console.Write(xyGrid[x, y]);
-            }
+            Console.Write(xyGrid[x, y]);
+            Console.ResetColor();
         }
         Console.WriteLine();
     }
     Console.WriteLine();
 }
 
+//doo doo
 int MinPath(byte[,] grid, int?[,] cache, Stack<(int, int)> alreadyVisited, int x = 0, int y = 0)
 {
     var xLen = grid.GetLength(0);
@@ -118,21 +133,16 @@ int MinPath(byte[,] grid, int?[,] cache, Stack<(int, int)> alreadyVisited, int x
 
     var directions = new[]
     {
-        (x: 1, y: 0),
-        (x: 0, y: 1),
-        //(x: -1, y: 0), because i don't allow it to go upwards, can't find paths
-        //(x: 0, y: -1),
-     };
+        (1, 0),
+        (0, 1),
+     }.Select(dir => (dir.Item1 + x, dir.Item2 + y));
 
 
     var min = int.MaxValue - 100000; //overflow maybe?
 
     alreadyVisited.Push((x, y));
-    foreach (var dir in directions)
+    foreach (var (newX, newY) in directions)
     {
-        var newX = x + dir.x;
-        var newY = y + dir.y;
-
         if (alreadyVisited.Contains((newX, newY)))
             continue;
 
@@ -150,6 +160,67 @@ int MinPath(byte[,] grid, int?[,] cache, Stack<(int, int)> alreadyVisited, int x
 
     return result;
 }
+int MinPathSteen(I2DReadOnlyIndexable<byte> grid, out List<(int x, int y)> path)  
+{
+    var queue = new PriorityQueue<(int x, int y), int>();
+
+    var xLen = grid.GetLength(0);
+    var yLen = grid.GetLength(1);
+
+    var distances = new int[xLen, yLen];
+    var prev = new (int x, int y)?[xLen, yLen];
+
+    for (var x = 0; x < xLen; ++x)
+    {
+        for (var y = 0; y < yLen; ++y)
+        {
+            distances[x, y] = int.MaxValue;
+            prev[x, y] = null;
+            queue.Enqueue((x, y), distances[x,y]);
+        }
+    }
+    distances[0, 0] = 0;
+
+    while (queue.Count > 0)
+    {
+        var min = queue.Dequeue();
+        var neighbours = new(int x, int y)[] { (1, 0), (0, 1), (-1, 0), (0, -1) }
+            .Select(d => 
+                (x: min.x + d.x, y: min.y + d.y)
+            )
+            .Where(d => 
+                d.x >= 0 && d.x < xLen && d.y >= 0 && d.y < yLen
+            );
+        
+        foreach(var nb in neighbours)
+        {
+            var dist = distances[min.x, min.y];
+            var risk = grid[nb.x, nb.y];
+
+            var alt = dist + risk;
+
+            if (alt < distances[nb.x, nb.y]) {
+                distances[nb.x, nb.y] = alt;
+                prev[nb.x, nb.y] = min;
+                // i don't need prev[]
+                queue.Enqueue(nb, alt);
+            }
+        }
+    }
+
+    // shortest path
+    path = new List<(int x, int y)>{};
+
+    (int x, int y)? current = (xLen - 1, yLen - 1);
+    while (current is (int, int) pos)
+    {
+        path.Add(pos);
+        current = prev[pos.x, pos.y];
+    }
+    path.Reverse();
+
+    return distances[xLen - 1, yLen - 1];
+}
 
 
 byte[,] Parse(string[] input)
@@ -158,9 +229,6 @@ byte[,] Parse(string[] input)
     var yLen = input.Length;
 
     var grid = new byte[xLen, yLen];
-
-    var lol = char.GetNumericValue('¾');
-    Debug.Assert(lol == 0.75);
 
     for (var y = 0; y < yLen; ++y)
     {
@@ -171,4 +239,51 @@ byte[,] Parse(string[] input)
     }
 
     return grid;
+}
+
+class VirtuallyRepeatedGrid : I2DReadOnlyIndexable<byte>
+{
+    byte [,] grid;
+    int repeat;
+    public VirtuallyRepeatedGrid(byte [,] grid, int repeat = 5)
+    {
+        this.grid = grid;
+        this.repeat = repeat;
+    }
+
+    public byte this[int x, int y] 
+    {
+        get {
+            var xLen = grid.GetLength(0);
+            var yLen = grid.GetLength(1);
+
+            var addition = x / xLen + y / yLen;
+
+            int now = grid[x % xLen, y % yLen] + addition;
+
+            now = (now - 1) % 9 + 1;
+
+            return (byte) now;
+        } 
+    }
+
+    public int GetLength(int dim) => grid.GetLength(dim) * repeat;
+    
+}
+
+public class Grid<T> : I2DReadOnlyIndexable<T>
+{
+    private T[,] grid;
+    public Grid(T[,] grid)
+    {
+        this.grid = grid;
+    }
+    public T this[int i, int j] { get => grid[i, j]; }
+    public int GetLength(int dim)  => grid.GetLength(dim);
+}
+
+public interface I2DReadOnlyIndexable<T>
+{
+    T this[int i, int j] { get; }
+    int GetLength(int dim);
 }

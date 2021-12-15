@@ -8,5 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="input" />
+    <Content Include="input_bade" />
   </ItemGroup>
 </Project>
