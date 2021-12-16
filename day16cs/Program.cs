@@ -163,8 +163,6 @@ ulong GetLiteralValue(IEnumerator<Bit> iterator, ref ulong readLength)
 
     } while (continueReading);
 
-    // not useful 
-
     return literalValue;
 }
 
