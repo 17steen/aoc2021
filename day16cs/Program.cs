@@ -40,7 +40,6 @@ Console.WriteLine(Solve(Parse(file)));
 
     var packetValue = ParsePacket(iterator, ref version, ref readLength);
 
-
     return (version, packetValue);
 }
 
@@ -50,18 +49,12 @@ ulong ParsePacket(IEnumerator<Bit> iterator, ref ulong versionSum, ref ulong rea
     var version = iterator
                     .Eat(3)
                     .AsUnsignedInteger();
-
     versionSum += version;
-    //Console.WriteLine($"version: {version}");
 
     var typeId = iterator
                     .Eat(3)
                     .AsUnsignedInteger();
-
     readLength += 6;
-
-    //Console.WriteLine($"type: {typeId}");
-
 
     return typeId switch
     {
@@ -73,7 +66,6 @@ ulong ParsePacket(IEnumerator<Bit> iterator, ref ulong versionSum, ref ulong rea
 ulong OperatorPacket(IEnumerator<Bit> enumerator, ulong type, ref ulong versionNumberSum, ref ulong readLength)
 {
     List<ulong> packetValues = new();
-    //int readLength = 6; //version + type
     var lengthId = enumerator.Eat();
     ++readLength;
     if (!lengthId)
@@ -171,10 +163,8 @@ ulong GetLiteralValue(IEnumerator<Bit> iterator, ref ulong readLength)
 
     } while (continueReading);
 
-    var zeroPadding = 4 - (readLength % 4);
-    //Console.WriteLine($"padding: {zeroPadding}");
+    // not useful 
 
-    //iterator.Eat(zeroPadding).NoOp(); // just iterate over
     return literalValue;
 }
 
@@ -192,9 +182,9 @@ namespace Extensions
         }
 
         // careful, only get eaten once iterated over
-        public static IEnumerable<T> Eat<T>(this IEnumerator<T> enumerator, int count)
+        public static IEnumerable<T> Eat<T>(this IEnumerator<T> enumerator, ulong count)
         {
-            for (int i = 0; i < count; ++i)
+            for (var i = 0UL; i < count; ++i)
             {
                 yield return enumerator.Eat();
             }
