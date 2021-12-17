@@ -1,12 +1,7 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Drawing;
-using System.Security;
-using System.Threading.Channels;
 
-const string sample = "target area: x=20..30, y=-10..-5";
-const string input = "target area: x=244..303, y=-91..-54";
-
+// ReSharper disable once UnusedVariable
 var throwsSample = @"23,-10  25,-9   27,-5   29,-6   22,-6   21,-7   9,0     27,-7   24,-5
 25,-7   26,-6   25,-5   6,8     11,-2   20,-5   29,-10  6,3     28,-7
 8,0     30,-6   29,-8   20,-10  6,7     6,4     6,1     14,-4   21,-6
@@ -32,27 +27,26 @@ var throwsSample = @"23,-10  25,-9   27,-5   29,-6   22,-6   21,-7   9,0     27,
     }).ToArray();
 
 var inputRec = new Rectangle(244, -91, 303 - 244 + 1, -54 - -91 + 1);
-
 var sampleRec = new Rectangle(20, -10, 30 - 20 + 1, -5 - -10 + 1);
 
 Debug.Assert(sampleRec.Contains(30, -5));
 Debug.Assert(sampleRec.Contains(20, -10));
 
-var retval = Solve(inputRec);
-Console.WriteLine(retval);
+Debug.Assert(Solve(sampleRec) == (45, 112));
+Console.WriteLine(Solve(inputRec));
 
 
 (int, int) Solve(Rectangle target)
 {
     var validThrows = new List<(int, int)>();
     var currentMaxY = int.MinValue;
-    
-    // TODO: make this loop not infinite thanks
-    // there must be a way to be intelligent about this
-    for (var startY = target.Top; startY < 999; ++startY)
-    {
-        // use this  : S = n(n + 1)/2  to get minimal starting value of x
 
+    // this is stupid, because the rectangle class comes from
+    // a drawing library, therefore, y is flipped…
+    var bottom = target.Top;
+    
+    for (var startY = bottom; startY <= -bottom; ++startY)
+    {
         for (var startX = 0; startX <= target.Right; ++startX)
         {
             var current = new Point(0, 0);
@@ -61,19 +55,11 @@ Console.WriteLine(retval);
 
             var maxY = 0;
 
-            var path = new List<Point>();
-
-            var i = 0;
-
             while (true)
             {
-                ++i;
                 current.Offset(xVelocity, yVelocity);
 
-                path.Add(current);
-
                 maxY = Math.Max(maxY, current.Y);
-
 
                 if (target.Contains(current))
                 {
@@ -81,12 +67,8 @@ Console.WriteLine(retval);
                     validThrows.Add((startX, startY));
                     break;
                 }
-                else if (current.X > target.Right || current.Y < target.Top)
+                else if (current.X > target.Right || current.Y < bottom)
                 {
-                    if (startX == 6 && startY == 0)
-                    {
-                        Console.WriteLine("mamma mia");
-                    }
                     break;
                 }
 
@@ -121,4 +103,3 @@ Console.WriteLine(retval);
 
     return (currentMaxY, validThrows.Count);
 }
-

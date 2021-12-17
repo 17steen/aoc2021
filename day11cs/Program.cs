@@ -150,26 +150,23 @@ void Print(int[,] grid)
 (int, int) Solve(int[,] grid, int steps)
 {
     var flashCount = 0;
-    //Print(grid);
     for (int i = 0;; ++i)
     {
-        //Console.WriteLine("\n");
         var res = Step(grid, out bool allFlashed);
+        //part1
         if (i < steps)
         {
             flashCount += res;
         }
+        //part2
         if (allFlashed)
         {
             return (flashCount, i + 1);
         }
-        //Print(grid);
     }
 }
 
 Debug.Assert(Solve(sample, 100) == (1656, 195));
 Console.WriteLine(Solve(input, 100));
-
-
 
 
