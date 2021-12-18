@@ -2,6 +2,7 @@
 .vscode/
 ### C ###
 # Prerequisites
+cmake-build-*/
 *.d
 .config/
 
