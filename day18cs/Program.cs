@@ -137,12 +137,6 @@ internal abstract class Node
 
     private static bool ReduceImpl(Node current, bool allowSplit = false, int depth = 0)
     {
-        if (depth == 4 && current is Pair p)
-        {
-            p.Explode();
-            return true;
-        }
-
         switch (current)
         {
             case Regular reg:
@@ -154,6 +148,11 @@ internal abstract class Node
 
                 break;
             case Pair pair:
+                if (depth == 4)
+                {
+                    pair.Explode();
+                    return true;
+                }
                 if (ReduceImpl(pair.Left, allowSplit, depth + 1)) return true;
                 if (ReduceImpl(pair.Right, allowSplit, depth + 1)) return true;
                 break;
