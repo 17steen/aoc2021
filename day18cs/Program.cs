@@ -51,9 +51,9 @@ IEnumerable<Pair> Parse(IEnumerable<string> input)
 uint Part2(Pair[] pairs)
 {
     var max = uint.MinValue;
-    for (int i = 0; i < pairs.Length; ++i)
+    for (var i = 0; i < pairs.Length; ++i)
     {
-        for (int j = 0; j < pairs.Length; ++j)
+        for (var j = 0; j < pairs.Length; ++j)
         {
             if (i == j) continue;
 
@@ -67,15 +67,15 @@ uint Part2(Pair[] pairs)
 
 Node Sum(IEnumerable<Pair> snailfishNumbers)
 {
-    var result = snailfishNumbers.Aggregate((a, b) => a.Add(b));
+    var result = snailfishNumbers.Aggregate((a, b) => a + b);
     
     return result;
 }
 
 
-abstract class Node 
+internal abstract class Node
 {
-    public Pair? Parent = null;
+    public Pair? Parent;
 
     public abstract Node Clone();
     public Pair Add(Node other)
@@ -84,6 +84,8 @@ abstract class Node
         result.Reduce();
         return result;
     }
+
+    public static Pair operator +(Node a, Node b) => a.Add(b);
 
     public static Node Parse(string input)
     {
@@ -161,7 +163,7 @@ abstract class Node
     }
 
     // tries to get a regular number to the left of it
-    public Regular? Left()
+    protected Regular? Left()
     {
         var papa = Parent;
         if (papa is null)
@@ -183,7 +185,7 @@ abstract class Node
         }
     }
 
-    public Regular? Right()
+    protected Regular? Right()
     {
         var papa = Parent;
         if (papa is null)
@@ -259,7 +261,7 @@ internal class Regular : Node
             throw new Exception("impossible");
     }
 
-    public Regular(uint value)
+    public Regular(uint value, Pair? parent = null)
     {
         this.Value = value;
     }
@@ -270,7 +272,7 @@ internal class Regular : Node
     }
 }
 
-class Pair : Node
+internal class Pair : Node
 {
     public new Node Left;
     public new Node Right;
